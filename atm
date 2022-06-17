@@ -1,0 +1,490 @@
+#include <stdio.h>
+#include <stdlib.h>                                
+#include <string.h>
+#include <windows.h>
+#define N 3
+int Usernumber=5201313;
+char FileName[20]="D:\\书书.txt";
+typedef struct 
+{
+	long zhanghao;
+	char name[20];
+	int mima;
+	double yue;
+	int zhuangtai;//0冻结，1正常
+}ATM;
+void jiemian();
+void BaoCun(ATM user[],int n,char FileName[]);//存入文件
+void Read(ATM user[],int n,char FileName[]);//读取文件
+void Save(ATM user,int n);//更新用户信息
+void TiQu(ATM user);//提取用户信息
+int mySort(ATM user[],int n);//找最大值
+int xb(ATM user[],int n,int nkey);//找下标，确定user的位置
+void KH(ATM user[]);//开户
+void Cunkuan(ATM user[]);//存款
+void Qukuan(ATM user[]);//取款
+void Chaxun(ATM user[]);//查询
+void Zhuanzhang(ATM user[]);//转账
+void Guashi(ATM user[]);//挂失
+void Jiegua(ATM user[]);//解挂
+void Gaimima(ATM user[]);//改密码
+void Xiaohu(ATM user[]);//销户
+int main()
+{
+	ATM user[N];
+	memset(user,0,sizeof(user));
+	Read(user,N, FileName);
+	int i = 0,a; 
+	while(user[i].zhanghao > 0)
+		i++;
+	while(1)
+	{
+		jiemian();
+		printf("请输入:");
+		scanf("%d",&a);
+		if(a==10)
+			break;
+		switch(a)
+		{
+		case 1:
+			KH(user);
+			break;
+		case 2:
+			Cunkuan(user);
+			break;
+		case 3:
+			Qukuan(user);
+			break;
+		case 4:
+			Chaxun(user);
+			break;
+		case 5:
+			Zhuanzhang(user);
+			break;
+		case 6:
+			Guashi(user);
+			break;
+		case 7:
+			Jiegua(user);
+			break;
+		case 8:
+			Gaimima(user);
+			break;
+		case 9:
+			Xiaohu(user);
+			break;
+		default:
+			printf("操作错误！！！\n");
+			break;
+		}
+	};
+	BaoCun(user,N, FileName);
+	return 0;
+}
+void BaoCun(ATM user[],int n,char FileName[])
+{
+	
+    FILE *fp;
+	fp=fopen(FileName,"w");
+	if(fp==NULL)
+	{
+		printf("打开文件失败！\n");
+		return;
+	}
+	for(int i=0;i<n;i++)
+	fwrite(&user[i],sizeof(ATM),1,fp);
+	fclose(fp);
+}
+void Read(ATM user[],int n,char FileName[])
+{
+	
+    FILE *fp;
+	fp=fopen(FileName,"r");
+	if(fp==NULL)
+	{
+		printf("打开文件失败！\n");
+		return;
+	}
+	for(int i=0;i<n;i++)
+	fread(&user[i],sizeof(ATM),1,fp);
+	fclose(fp);
+}
+int mySort(ATM user[],int n)
+{
+	long max=user[0].zhanghao;
+	for(int i=1;i<n;i++)
+	{
+		if(max<user[i].zhanghao)
+			max=user[i].zhanghao;
+	}
+	return max;
+}
+int xb(ATM user[],int n,int nkey)
+{
+	int index=-1;
+	for(int i=0;i<n;i++)
+	{
+		if(user[i].zhanghao==nkey)
+		{
+			index=i;
+			break;
+		}
+	}
+	return index;
+}
+void jiemian()
+{
+	printf("\t请选择你需要进行的项目:\t\n\n");
+	printf("\t1.开户\t2.存款\t3.取款\t4.查询\t5.转账\n\n");
+	printf("\t6.挂失\t7.解挂\t8.改密\t9.销户\t10.退出系统\n\n");
+}
+void KH(ATM user[])
+{
+	ATM t;
+	int i=0;
+	while(user[i].zhanghao>0)
+		i++;
+	long m=mySort(user,N);
+	if(i==0)
+	{
+		m+=5201313;
+	}
+	user[i].zhanghao=m+1;
+	printf("账号：%ld\n",user[i].zhanghao);
+	printf("用户名：");
+	scanf("%s",&user[i].name);
+	printf( "请输入密码(6位):");
+	scanf("%d",&user[i].mima);
+	while(1)
+	{
+		printf("请再次输入的密码:");
+		scanf("%d",&t.mima);
+		if (t.mima==user[i].mima)
+		{
+			printf( "密码正确，开户成功！\n" );	
+			break;
+		}
+		else
+		{
+			printf( "密码不一致，重新输入密码！\n" );
+			continue;
+		}
+	}
+	user[i].yue=0;
+	user[i].zhuangtai=1;
+	printf("\t余额：%lf\n",user[i].yue);
+	printf("\t状态：%d\n",user[i].zhuangtai);	
+}
+void Cunkuan(ATM user[])
+{
+	int input,i,mm;
+	double money;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账户已被冻结，请前往‘解挂’进行操作！\n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+	do
+	{
+		printf("请输入密码:");
+		scanf("%d",&mm);
+		if(mm!=user[i].mima)
+		{
+			printf("密码错误，请重新输入！");
+		}
+		else
+		{
+			printf("\t登录成功！\n");
+			printf("请输入存入的金额：");
+			scanf("%lf",&money);
+			user[i].yue+=money;
+			printf("\t存入%.2lf元，余额为%.2lf元\n",money,user[i].yue);
+			break;
+		}
+	}while(1);
+}
+void Qukuan(ATM user[])
+{
+	long input,i,mm;
+	double money;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账户已被冻结，请前往‘解挂’进行操作！ \n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+	do
+	{
+		printf("请输入密码:");
+		scanf("%d",&mm);
+		if(mm!=user[i].mima)
+		{
+			printf("密码错误，请重新输入！");
+		}
+		else
+		{
+			printf("\t登录成功！\n");
+			while(1)
+			{
+				printf("请输入取款的金额：");
+				scanf("%lf",&money);
+				if(user[i].yue-money<0)
+				{
+					printf("\t余额不足，不能进行操作！！！\n");
+					
+				}
+				else
+					break;
+			}
+			user[i].yue-=money;
+			printf("\t取出%.2lf元，余额为%.2lf元\n",money,user[i].yue);
+			break;
+		}
+	}while(1);
+}
+void Chaxun(ATM user[])
+{
+	long input,i,mm;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账户已被冻结，请前往‘解挂’进行操作！\n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+	{
+		do
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima==mm)
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+			{
+				printf("\t登录成功！\n");
+				printf("\t你的余额为%.2lf元\n",user[i].yue);
+				printf("\t状态为：%d",user[i].zhuangtai);
+				break;
+			}
+		}while(1);
+	}
+}
+void Zhuanzhang(ATM user[])
+{
+	long input,i,mm,putee,b;
+	double money;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+	printf("该账户已被冻结，请前往‘解挂’进行操作！\n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+	{
+		do
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima!=mm)
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+			{
+				printf("\t登录成功！\n");
+				printf("请输入你转账的用户的账号：");
+				scanf("%ld",&putee);
+				b=xb(user,N,putee);
+				do
+				{
+					printf("请输入你转账的金额：");
+					scanf("%lf",&money);
+					if(user[i].yue-money<0)
+					{
+						printf("余额不足，请重新输入金额！\n");
+					}
+					else
+					{
+						user[b].yue+=money;
+						user[i].yue-=money;
+						printf("转账成功，你的余额为%.2lf元\n",user[i].yue);
+						break;
+					}
+				}while(1);
+				break;   
+			}
+		}while(1);
+	}
+}
+void Guashi(ATM user[])
+{
+	long input,i,z,mm;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账号已被冻结，不需要冻结重复操作！\n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+		do
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima!=mm)
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+			{
+				printf("\t请确认是否挂失此卡，挂失成功后将会冻结该账号！\n");
+				printf("\t是（1）\t否（0）\n");
+				while(1)
+				{
+					printf("请输入你的选择：");
+					scanf("%d",&z);		
+					if(z==0)
+						break;
+					if(z==1)
+					{
+						user[i].zhuangtai=0;
+						printf("挂失完成！\n");
+						break;
+					}
+					else
+						printf("输入错误，重新输入！\n");
+				}
+				break;
+			}
+		}while(1);
+}
+void Jiegua(ATM user[])
+{
+	long input,i,z,mm;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账号为被冻结，不需要解挂！");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+		do
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima!=mm)
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+			{
+				printf("\t是否确认解冻\n");
+				printf("\t是（1）\t否（0）\n");
+				while(1){
+					printf("请输入你的选择：");
+					scanf("%d",&z);		
+					if(z==0)
+						break;
+					if(z==1)
+					{
+						user[i].zhuangtai=1;
+						printf("解挂完成！\n");
+						break;
+					}
+					else
+						printf("输入错误，重新输入！\n");
+					}
+				break;
+			}
+		}while(1);
+}
+void Gaimima(ATM user[])
+{
+	long input;
+	int i,xinmm,mm;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账户已被冻结，请前往‘解挂’进行操作！\n");
+	else if(user[i].zhuangtai==2)
+		printf("该账号已被销户！！！\n");
+	else
+	{
+		while(1)
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima!=mm)
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+				break;
+		}
+		printf("登录成功！\n");
+		printf("请输入你的新密码：");
+		scanf("%d",&user[i].mima);;
+		while(1)
+		{
+			printf("再次输入密码：");
+			scanf("%d",&xinmm);
+			if(user[i].mima==xinmm)
+			{
+				printf("修改密码成功！\n");
+				break;
+			}
+			else
+				printf("密码错误，重新输入");
+		}
+	}
+}
+void Xiaohu(ATM user[])
+{
+	long input,i,z,mm;
+	printf("请输入您的账号:");
+	scanf("%ld",&input);
+	i=xb(user,N,input);
+	if(user[i].zhuangtai==0)
+		printf("该账号为被冻结，无法进行销户，请解挂后再操作！");
+	else
+		do
+		{
+			printf("请输入密码:");
+			scanf("%d",&mm);
+			if(user[i].mima!=mm)	
+			{
+				printf("密码错误，请重新输入！");
+			}
+			else
+			{
+				printf("\t确认是否销户\n");
+				printf("\t是（2）\t否（0）\n");
+				while(1){
+					printf("请输入你的选择：");
+					scanf("%d",&z);		
+					if(z==0)
+						break;
+					if(z==2)
+					{
+						user[i].zhuangtai=0;
+						printf("销户完成！\n");
+						break;
+					}
+					else
+						printf("输入错误，重新输入！\n");
+					}
+				break;
+			}
+		}while(1);
+}
