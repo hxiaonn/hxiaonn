@@ -1,0 +1,608 @@
+#include"iostream"
+#include"string"
+#include"conio.h"
+#include"graphics.h"
+#include"EasyX.h"
+#define MAX 30
+using namespace std;
+
+typedef struct User{
+	char Card_Number[20];//卡号
+	char User_Name[10];//用户名
+	char Password[7];//密码
+	float Balance;//余额
+}User;
+
+//初始化ATM系统
+void Initialize(User* account) {
+	FILE* filepointer;
+	filepointer=fopen("User_information_database.txt", "r+");
+	char Temporary_String[100];
+	for (int i = 0; i < MAX; i++) {
+		fgets(Temporary_String, 100, filepointer);
+		strcpy(account[i].Card_Number, strtok(Temporary_String, ";"));
+		strcpy(account[i].User_Name, strtok(NULL, ";"));
+		strcpy(account[i].Password, strtok(NULL, ";"));
+		account[i].Balance = atof(strtok(NULL, ";"));
+	}
+	fclose(filepointer);
+}
+
+//检查输入信息
+bool Checkout(User* account, int* Number, char* info, int type) {
+	if(type==1)//检查账号（1）
+		for (int i = 0; i < MAX; i++) 
+			if (0 == strcmp(info, account[i].Card_Number)) { 
+				*Number = i;//用户编号赋值
+				return true;
+			}
+	if(type==2)//检查密码（2）
+		if (0 == strcmp(info, account[*Number].Password))
+			return true;
+	return false;
+}
+
+//输入账号
+void Account_Input(char* Card_Number) {
+	RECT position = { 75,430,480,510 };
+	setbkmode(TRANSPARENT);
+	settextstyle(60, 17, "微软雅黑");
+	setbkcolor(RGB(32, 89, 206));
+	clearrectangle(72, 430, 481, 507);
+	int index = 0;
+	char character = '\0';
+	while (character != '\r' && index != 20) {
+		character = getch();
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				Card_Number[--index] = '\0';
+				clearrectangle(72, 430, 481, 507);
+			}
+			else if (character != '\b')
+				Card_Number[index++] = character;
+		if(index<20)
+			Card_Number[index] = '\0';
+		drawtext(Card_Number, &position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+
+//输入密码
+void Password_Input(char* Password) {
+	char Asterisk[7];
+	RECT position = { 58,145,491,235 };
+	setbkmode(TRANSPARENT);
+	settextstyle(120, 60, "微软雅黑");
+	setbkcolor(RGB(21, 70, 181));
+	int index = 0;
+	char character = '\0';
+	while (character != '\r' && index != 6) {
+		character = getch();
+		clearrectangle(38, 130, 987, 214);
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				Password[--index] = '\0';
+				Asterisk[index] = '\0';
+				clearrectangle(38, 130, 987, 214);
+			}
+			else if (character != '\b') {
+				Password[index] = character;
+				Asterisk[index++] = '*';
+			}
+		if (index < 7) {
+			Password[index] = '\0';
+			Asterisk[index] = '\0';
+		}
+		drawtext(Asterisk, &position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+}
+
+//输入账户信息
+void Account_Information_Input(User* Account_information) {
+	RECT User_name_position = { 415,310,960,370 };
+	RECT Card_number_position = { 415,415,960,475 };
+	RECT Amount_position = { 415,515,960,575 };
+	setbkmode(TRANSPARENT);
+	settextstyle(58, 0, "微软雅黑");
+	settextcolor(WHITE);
+	setbkcolor(RGB(33, 70, 177));
+	//输入账户名称
+	int index = 0;
+	char character = '\0';
+	clearrectangle(415, 313, 955, 365);
+	while (character != '\r' && index != 10) {
+		character = getch();
+		if (index > 0 && character == '\b') {
+			Account_information->User_Name[--index] = '\0';
+			clearrectangle(415, 313, 955, 365);
+		}
+		else if (character != '\b' && character != '\r')
+			Account_information->User_Name[index++] = character;
+		if (index < 10)
+			Account_information->User_Name[index] = '\0';
+		drawtext(Account_information->User_Name, &User_name_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+	//输入账户账号
+	index = 0;
+	character = '\0';
+	clearrectangle(415, 418, 955, 470);
+	while (character != '\r' && index != 19) {
+		character = getch();
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				Account_information->Card_Number[--index] = '\0';
+				clearrectangle(415, 418, 955, 470);
+			}
+			else if (character != '\b')
+				Account_information->Card_Number[index++] = character;
+		if (index < 20)
+			Account_information->Card_Number[index] = '\0';
+		drawtext(Account_information->Card_Number, &Card_number_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+	//输入转账金额
+	index = 0;
+	character = '\0';
+	char amount_information[16];
+	clearrectangle(415, 518, 955, 570);
+	while (character != '\r' && index != 15) {
+		character = getch();
+		if ((character >= '0' && character <= '9') || character == '\b'|| character == '.')
+			if (index > 0 && character == '\b') {
+				amount_information[--index] = '\0';
+				clearrectangle(415, 518, 955, 570);
+			}
+			else if (character != '\b')
+				amount_information[index++] = character;
+		if (index < 16)
+			amount_information[index] = '\0';
+		drawtext(amount_information, &Amount_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+		Account_information->Balance=atof(amount_information);
+	}
+}
+
+//功能选择
+int Function_Selection(MOUSEMSG message) {
+	if (message.x >= 30 && message.x <= 270 && message.y >= 300 && message.y <= 415) return 1;//余额查询
+	if (message.x >= 390 && message.x <= 630 && message.y >= 300 && message.y <= 415) return 2;//转账
+	if (message.x >= 755 && message.x <= 990 && message.y >= 300 && message.y <= 415) return 3;//存款
+	if (message.x >= 30 && message.x <= 270 && message.y >= 440 && message.y <= 555) return 4;//账户信息
+	if (message.x >= 390 && message.x <= 630 && message.y >= 440 && message.y <= 555) return 5;//密码修改
+	if (message.x >= 755 && message.x <= 990 && message.y >= 440 && message.y <= 555) return 6;//取款
+	if (message.x >= 30 && message.x <= 270 && message.y >= 577 && message.y <= 695) return 7;//明细查询
+	if (message.x >= 390 && message.x <= 630 && message.y >= 577 && message.y <= 695) return 8;//帮助
+	if (message.x >= 755 && message.x <= 990 && message.y >= 577 && message.y <= 695) return 9;//退卡
+}
+
+//起始界面
+void Start_interface(User* account, int* Number) {
+	char Card_Number[20];
+	IMAGE Background;
+	loadimage(&Background,"ATM图形资源库//起始界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	Account_Input(Card_Number);
+	while (0 == Checkout(account, Number, Card_Number, 1)) {
+		loadimage(&Background, "ATM图形资源库//账号输入错误，请重新输入！.png", 1024, 768);
+		putimage(0, 0, &Background);
+		Account_Input(Card_Number);
+	}
+}
+
+//退卡界面
+void Exit_interface(User* account) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//退卡界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	FILE* filepointer;
+	filepointer = fopen("User_information_database.txt", "w+");
+	for (int i = 0; i < MAX; i++)
+		fprintf(filepointer, "%s;%s;%s;%.2f\n", account[i].Card_Number, account[i].User_Name, account[i].Password, account[i].Balance);
+	fclose(filepointer);
+	Sleep(1000);
+	exit(0);
+}
+
+//密码界面
+void Password_interface(User* account, int* Number) {
+	char Password[7];
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//密码界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	Password_Input(Password);
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 750 && message.x <= 985 && message.y >= 260 && message.y <= 380)//确认按钮
+				if (0 == Checkout(account, Number, Password, 2)) {
+					loadimage(&Background, "ATM图形资源库//密码输入错误，请重新输入！.png", 1024, 768);
+					putimage(0, 0, &Background);
+					Password_Input(Password);
+				}
+				else break;
+			if (message.x >= 750 && message.x <= 985 && message.y >= 385 && message.y <= 500) //更正按钮
+				Password_Input(Password);
+			if (message.x >= 750 && message.x <= 985 && message.y >= 635 && message.y <= 755) //退卡按钮
+				Exit_interface(account);
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//余额查询界面
+void Balance_query_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//余额查询界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	char Balance[16];
+	RECT position_account_balance = { 495,300,725,343 };
+	RECT position_avaliable_balance = { 495,410,725,455 };
+	setbkmode(TRANSPARENT);
+	settextstyle(36, 0, "黑体");
+	settextcolor(BLACK);
+	sprintf(Balance, "%.2f元",account[Number].Balance);
+	drawtext(Balance, &position_account_balance, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	drawtext(Balance, &position_avaliable_balance, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 30 && message.x <= 270 && message.y >= 565 && message.y <= 685)//返回按钮
+				break;
+			if (message.x >= 755 && message.x <= 1000 && message.y >= 565 && message.y <= 685)//退卡按钮
+				Exit_interface(account);
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//转账界面
+void Transfer_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//转账界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	User Account_information;
+	Account_Information_Input(&Account_information);
+	int Account_Number;
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 50 && message.x <= 290 && message.y >= 600 && message.y <= 720) //返回按钮
+				break;
+			if (message.x >= 730 && message.x <= 975 && message.y >= 600 && message.y <= 720) { //确定按钮
+				Checkout(account, &Account_Number, Account_information.Card_Number, 1);
+				if (0 == strcmp(account[Account_Number].User_Name, Account_information.User_Name))
+					if (account[Number].Balance >= Account_information.Balance) {
+						account[Number].Balance -= Account_information.Balance;
+						account[Account_Number].Balance += Account_information.Balance;
+						loadimage(&Background, "ATM图形资源库//转账成功！.png", 1024, 768);
+						putimage(0, 0, &Background);
+					}
+					else {
+						loadimage(&Background, "ATM图形资源库//账户余额不足，转账失败！.png", 1024, 768);
+						putimage(0, 0, &Background);
+					}
+				else {
+					loadimage(&Background, "ATM图形资源库//账户信息输入错误，请重新输入！.png", 1024, 768);
+					putimage(0, 0, &Background);
+				}
+			}
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//存款界面
+void Deposit_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//存款界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	RECT Amount_position = { 295,360,735,470 };
+	setbkmode(TRANSPARENT);
+	settextstyle(60, 0, "微软雅黑");
+	settextcolor(WHITE);
+	setbkcolor(RGB(23, 70, 170));
+	int index = 0;
+	char character = '\0';
+	char amount_deposited[16];
+	clearrectangle(298, 363, 732, 467);
+	while (character != '\r' && index != 15) {
+		character = getch();
+		clearrectangle(298, 363, 732, 467);
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				amount_deposited[--index] = '\0';
+				clearrectangle(298, 363, 732, 467);
+			}
+			else if (character != '\b')
+				amount_deposited[index++] = character;
+		if (index < 16)
+			amount_deposited[index] = '\0';
+		drawtext(amount_deposited, &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 30 && message.x <= 270 && message.y >= 580 && message.y <= 700) //返回按钮
+				break;
+			if (message.x >= 765 && message.x <= 1010 && message.y >= 580 && message.y <= 700) { //确定按钮
+				account[Number].Balance += atoi(amount_deposited);
+				loadimage(&Background, "ATM图形资源库//存款成功！.png", 1024, 768);
+				putimage(0, 0, &Background);
+			}
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//账户信息界面
+void Account_information_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//账户信息界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	RECT position_account_name = { 470,305,715,345 };
+	RECT position_account_number = { 470,412,715,452 };
+	setbkmode(TRANSPARENT);
+	settextstyle(38, 0, "微软雅黑");
+	settextcolor(BLACK);
+	drawtext(account[Number].User_Name, &position_account_name, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	settextstyle(30, 0, "微软雅黑");
+	drawtext(account[Number].Card_Number, &position_account_number, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 30 && message.x <= 270 && message.y >= 565 && message.y <= 685)//返回按钮
+				break;
+			if (message.x >= 755 && message.x <= 1000 && message.y >= 565 && message.y <= 685)//退卡按钮
+				Exit_interface(account);
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//密码修改界面
+void Password_modification_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//密码修改界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	char Original_Password[7];
+	char Original_Password_Asterisk[7];
+	char New_Password[7];
+	char New_Password_Asterisk[7];
+	char Secondary_Password[7];
+	char Secondary_Password_Asterisk[7];
+	RECT Original_Password_position = { 515,313,845,370 };
+	RECT New_Password_position = { 515,415,845,475 };
+	RECT Secondary_Password_position = { 515,518,845,577 };
+	setbkmode(TRANSPARENT);
+	settextstyle(60, 30, "微软雅黑");
+	settextcolor(WHITE);
+	setbkcolor(RGB(33, 70, 177));
+	//输入原密码
+	int index = 0;
+	char character = '\0';
+	while (character != '\r' && index != 6) {
+		character = getch();
+		clearrectangle(515, 313, 845, 370);
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				Original_Password[--index] = '\0';
+				Original_Password_Asterisk[index] = '\0';
+				clearrectangle(515, 313, 845, 370);
+			}
+			else if (character != '\b') {
+				Original_Password[index] = character;
+				Original_Password_Asterisk[index++] = '*';
+			}
+		if (index < 7) {
+			Original_Password[index] = '\0';
+			Original_Password_Asterisk[index] = '\0';
+		}
+		drawtext(Original_Password_Asterisk, &Original_Password_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+	//输入新密码
+	index = 0;
+	character = '\0';
+	while (character != '\r' && index != 6) {
+		character = getch();
+		clearrectangle(515, 415, 845, 475);
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				New_Password[--index] = '\0';
+				New_Password_Asterisk[index] = '\0';
+				clearrectangle(515, 415, 845, 475);
+			}
+			else if (character != '\b') {
+				New_Password[index] = character;
+				New_Password_Asterisk[index++] = '*';
+			}
+		if (index < 7) {
+			New_Password[index] = '\0';
+			New_Password_Asterisk[index] = '\0';
+		}
+		drawtext(New_Password_Asterisk, &New_Password_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+	//再次输入密码
+	index = 0;
+	character = '\0';
+	while (character != '\r' && index != 6) {
+		character = getch();
+		clearrectangle(515, 518, 845, 577);
+		if ((character >= '0' && character <= '9') || character == '\b')
+			if (index > 0 && character == '\b') {
+				Secondary_Password[--index] = '\0';
+				Secondary_Password_Asterisk[index] = '\0';
+				clearrectangle(515, 518, 845, 577);
+			}
+			else if (character != '\b') {
+				Secondary_Password[index] = character;
+				Secondary_Password_Asterisk[index++] = '*';
+			}
+		if (index < 7) {
+			Secondary_Password[index] = '\0';
+			Secondary_Password_Asterisk[index] = '\0';
+		}
+		drawtext(Secondary_Password_Asterisk, &Secondary_Password_position, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+	}
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 30 && message.x <= 270 && message.y >= 600 && message.y <= 720) //返回按钮
+				break;
+			if (message.x >= 750 && message.x <= 995 && message.y >= 600 && message.y <= 720) { //确定按钮
+				if (0 == strcmp(account[Number].Password, Original_Password) && 0 == strcmp(New_Password, Secondary_Password)) {
+					strcpy(account[Number].Password, New_Password);
+					loadimage(&Background, "ATM图形资源库//密码修改成功！.png", 1024, 768);
+					putimage(0, 0, &Background);
+				}
+				else {
+					loadimage(&Background, "ATM图形资源库//密码输入有误，修改失败！.png", 1024, 768);
+					putimage(0, 0, &Background);
+				}
+			}
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//取款界面
+void Withdrawal_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//取款界面.png", 1024, 768);
+	putimage(0, 0, &Background);
+	int Current_amount=0;
+	RECT Amount_position = { 295,290,730,400 };
+	RECT Other_Amount_position = { 298,390,726,491 };
+	setbkmode(TRANSPARENT);
+	settextstyle(80, 0, "微软雅黑");
+	settextcolor(WHITE);
+	setbkcolor(RGB(23, 70, 170));
+	MOUSEMSG message;
+	while (1) {
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			if (message.x >= 15 && message.x <= 255 && message.y >= 580 && message.y <= 700)//返回按钮
+				break;
+			if (message.x >= 770 && message.x <= 1010 && message.y >= 580 && message.y <= 700) {//确认按钮
+				if (Current_amount <= account[Number].Balance && Current_amount != 0) {
+					account[Number].Balance -= Current_amount;
+					loadimage(&Background, "ATM图形资源库//取款成功.png", 1024, 768);
+					putimage(0, 0, &Background);
+				}
+				else if (Current_amount != 0) {
+					loadimage(&Background, "ATM图形资源库//余额不足，请重新选择金额！.png", 1024, 768);
+					putimage(0, 0, &Background);
+				}
+			}
+			if (message.x >= 770 && message.x <= 1010 && message.y >= 435 && message.y <= 555) {//其他金额
+				loadimage(&Background, "ATM图形资源库//请输入取款金额！.png", 1024, 768);
+				putimage(0, 0, &Background);
+				int index = 0;
+				char character = '\0';
+				char amount_deposited[16];
+				clearrectangle(298, 390, 726, 491);
+				while (character != '\r' && index != 15) {
+					character = getch();
+					clearrectangle(298, 390, 726, 491);
+					if ((character >= '0' && character <= '9') || character == '\b')
+						if (index > 0 && character == '\b') {
+							amount_deposited[--index] = '\0';
+							clearrectangle(298, 390, 726, 491);
+						}
+						else if (character != '\b')
+							amount_deposited[index++] = character;
+					if (index < 16)
+						amount_deposited[index] = '\0';
+					drawtext(amount_deposited, &Other_Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+				}
+				Current_amount = atoi(amount_deposited);
+			}
+			if (message.x >= 15 && message.x <= 255 && message.y >= 285 && message.y <= 405) {//100
+				Current_amount = 100;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("100", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 770 && message.x <= 1010 && message.y >= 285 && message.y <= 405) {//20000
+				Current_amount = 20000;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("20000", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 15 && message.x <= 255 && message.y >= 435 && message.y <= 555) {//500
+				Current_amount = 500;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("500", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 265 && message.x <= 510 && message.y >= 435 && message.y <= 555) {//1000
+				Current_amount = 1000;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("1000", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 520 && message.x <= 760 && message.y >= 435 && message.y <= 555) {//2000
+				Current_amount = 2000;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("2000", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 265 && message.x <= 510 && message.y >= 580 && message.y <= 700) {//5000
+				Current_amount = 5000;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("5000", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+			if (message.x >= 520 && message.x <= 760 && message.y >= 580 && message.y <= 700) {//10000
+				Current_amount = 10000;
+				clearrectangle(295, 293, 727, 397);
+				drawtext("10000", &Amount_position, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+			}
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+//明细查询界面
+void Details_query_interface(User* account, int Number) {
+
+}
+
+//帮助界面
+void Help_interface() {
+
+}
+
+//功能界面
+void Functional_interface(User* account, int Number) {
+	IMAGE Background;
+	loadimage(&Background, "ATM图形资源库//功能界面.png", 1024, 768);
+	MOUSEMSG message;
+	while (1) {
+		putimage(0, 0, &Background);
+		message = GetMouseMsg();
+		if (message.mkLButton) {
+			switch (Function_Selection(message)) {
+				case 1:cout << "余额查询" << endl; Balance_query_interface(account, Number); break;//余额查询
+				case 2:cout << "转账" << endl; Transfer_interface(account, Number); break;//转账
+				case 3:cout << "存款" << endl; Deposit_interface(account, Number); break;//存款
+				case 4:cout << "账户信息" << endl; Account_information_interface(account, Number); break;//账户信息
+				case 5:cout << "密码修改" << endl; Password_modification_interface(account, Number); break;//密码修改
+				case 6:cout << "取款" << endl; Withdrawal_interface(account, Number); break;//取款
+				case 7:cout << "明细查询" << endl; Details_query_interface(account, Number); break;//明细查询
+				case 8:cout << "帮助" << endl; Help_interface(); break;//帮助
+				case 9:cout << "退卡" << endl; Exit_interface(account); exit(0);//退卡
+				default:break;
+			}
+		}
+		FlushMouseMsgBuffer();//清空鼠标消息缓冲区
+	}
+}
+
+int main() {
+	initgraph(1024, 768);
+	User account[MAX];//定义用户信息
+	int Number;//定义用户编号
+	Initialize(account);//初始化ATM系统
+	Start_interface(account,&Number);//起始界面
+	Password_interface(account,&Number);//密码界面
+	Functional_interface(account, Number);//功能界面
+	closegraph();
+	return 0;
+}
